@@ -48,6 +48,9 @@ android {
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        manifestPlaceholders = [
+          'appAuthRedirectScheme': 'org.lichess.flutterdemo://login-callback'
+        ]
     }
 
     buildTypes {
