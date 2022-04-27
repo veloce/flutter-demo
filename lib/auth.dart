@@ -54,7 +54,7 @@ class Auth {
         await _storage.delete(key: lichessClientId);
         me = null;
       } finally {
-          authHttp.close();
+        authHttp.close();
       }
     }
   }
@@ -64,8 +64,7 @@ class Auth {
     try {
       final uri = Uri.parse('$lichessHost/api/account');
       developer.log('Calling: ' + uri.toString());
-      final response =
-          await authHttp.get(uri);
+      final response = await authHttp.get(uri);
 
       developer.log('Response code: ' + response.statusCode.toString());
       if (response.statusCode == 200) {
@@ -86,7 +85,8 @@ class AuthClient extends http.BaseClient {
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     final token = await _storage.read(key: lichessClientId);
     request.headers['Authorization'] = 'Bearer ' + (token ?? '');
-    developer.log('http authorization header: ' + request.headers['Authorization']!);
+    developer
+        .log('http authorization header: ' + request.headers['Authorization']!);
     return _inner.send(request);
   }
 }

@@ -41,19 +41,24 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final _auth = Auth();
+  late final Future<void> _firstLoad;
+
   bool isBusy = false;
   String? username;
 
   @override
   void initState() {
     super.initState();
-    _init();
+
+    _firstLoad = _init();
   }
 
-  _init() async {
+  Future<void> _init() async {
     developer.log('Init state...');
     await _auth.init();
-    developer.log(_auth.me?.username != null ? 'Authenticated as ${_auth.me!.username}' : 'Not authenticated');
+    developer.log(_auth.me?.username != null
+        ? 'Authenticated as ${_auth.me!.username}'
+        : 'Not authenticated');
     setState(() {
       username = _auth.me?.username;
     });
@@ -88,12 +93,23 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Center(
-          child: isBusy
-              ? const CircularProgressIndicator()
-              : username != null
-                  ? Profile(logoutAction, username!)
-                  : Login(loginAction)),
+      body: FutureBuilder(
+          future: _firstLoad,
+          builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return Center(
+                child: isBusy
+                    ? const CircularProgressIndicator()
+                    : username != null
+                        ? Profile(logoutAction, username!)
+                        : Login(loginAction),
+              );
+            } else {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+          }),
     );
   }
 }
@@ -133,10 +149,10 @@ class Profile extends StatelessWidget {
         Text('Hello, $name'),
         const SizedBox(height: 10.0),
         ElevatedButton(
-            onPressed: () async {
-              await logoutAction();
-            },
-            child: const Text('Logout'),
+          onPressed: () async {
+            await logoutAction();
+          },
+          child: const Text('Logout'),
         ),
       ],
     );
