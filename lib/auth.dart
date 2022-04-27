@@ -17,9 +17,13 @@ class Auth {
   Me? me;
 
   Future<void> init() async {
-    final tresp = await _storage.read(key: lichessClientId);
-    if (tresp != null) {
-      await authenticate();
+    try {
+      final tresp = await _storage.read(key: lichessClientId);
+      if (tresp != null) {
+        await authenticate();
+      }
+    } on Exception catch (e, s) {
+      developer.log('Error on auth init: $e, $s');
     }
   }
 

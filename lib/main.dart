@@ -1,17 +1,11 @@
-import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
-import 'package:flutter_appauth/flutter_appauth.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'auth.dart';
 
-const String lichessHost = 'https://lichess.org';
-const String lichessClientId = 'lichess_flutter_demo';
-const String redirectUri = 'org.lichess.flutterdemo://login-callback';
+final auth = Auth();
 
-final FlutterAppAuth appAuth = FlutterAppAuth();
-const FlutterSecureStorage secureStorage = FlutterSecureStorage();
-
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await auth.init();
   runApp(const MyApp());
 }
 
@@ -40,39 +34,18 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final _auth = Auth();
-  late final Future<void> _firstLoad;
-
   bool isBusy = false;
-  String? username;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _firstLoad = _init();
-  }
-
-  Future<void> _init() async {
-    developer.log('Init state...');
-    await _auth.init();
-    developer.log(_auth.me?.username != null
-        ? 'Authenticated as ${_auth.me!.username}'
-        : 'Not authenticated');
-    setState(() {
-      username = _auth.me?.username;
-    });
-  }
+  String? username = auth.me?.username;
 
   Future<void> loginAction() async {
     setState(() {
       isBusy = true;
     });
 
-    await _auth.login();
+    await auth.login();
     setState(() {
       isBusy = false;
-      username = _auth.me?.username;
+      username = auth.me?.username;
     });
   }
 
@@ -80,7 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       isBusy = true;
     });
-    await _auth.logout();
+    await auth.logout();
     setState(() {
       isBusy = false;
       username = null;
@@ -93,23 +66,13 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: FutureBuilder(
-          future: _firstLoad,
-          builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return Center(
-                child: isBusy
-                    ? const CircularProgressIndicator()
-                    : username != null
-                        ? Profile(logoutAction, username!)
-                        : Login(loginAction),
-              );
-            } else {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
-          }),
+      body: Center(
+        child: isBusy
+            ? const CircularProgressIndicator()
+            : username != null
+                ? Profile(logoutAction, username!)
+                : Login(loginAction),
+      ),
     );
   }
 }
