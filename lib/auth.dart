@@ -18,9 +18,9 @@ class Auth {
 
   Future<void> init() async {
     try {
-      final tresp = await _storage.read(key: lichessClientId);
-      if (tresp != null) {
-        await authenticate();
+      final token = await _storage.read(key: lichessClientId);
+      if (token != null) {
+        await _getMyAccount();
       }
     } on Exception catch (e, s) {
       developer.log('Error on auth init: $e, $s');
@@ -41,7 +41,7 @@ class Auth {
       if (result != null) {
         developer.log('Got accessToken ${result.accessToken}');
         await _storage.write(key: lichessClientId, value: result.accessToken);
-        await authenticate();
+        await _getMyAccount();
       } else {
         throw Exception('Could not login');
       }
@@ -63,7 +63,7 @@ class Auth {
     }
   }
 
-  Future<void> authenticate() async {
+  Future<void> _getMyAccount() async {
     final authHttp = AuthClient(http.Client());
     try {
       final uri = Uri.parse('$lichessHost/api/account');

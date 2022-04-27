@@ -41,7 +41,6 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       isBusy = true;
     });
-
     await auth.login();
     setState(() {
       isBusy = false;
