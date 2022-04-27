@@ -44,12 +44,12 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "org.lichess.flutter_demo"
-        minSdkVersion flutter.minSdkVersion
+        minSdkVersion 18
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
-        manifestPlaceholders = [
-          'appAuthRedirectScheme': 'org.lichess.flutterdemo://login-callback'
+        manifestPlaceholders += [
+          'appAuthRedirectScheme': 'org.lichess.flutterdemo'
         ]
     }
 
