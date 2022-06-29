@@ -137,6 +137,9 @@ class _CountdownClockState extends State<CountdownClock> {
     return Timer.periodic(_period, (timer) {
       setState(() {
         timeLeft = timeLeft - _period;
+        if (timeLeft <= Duration.zero) {
+          timer.cancel();
+        }
       });
     });
   }
@@ -158,6 +161,12 @@ class _CountdownClockState extends State<CountdownClock> {
     if (widget.active) {
       _timer = startTimer();
     }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _timer?.cancel();
   }
 
   @override
