@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'auth.dart';
+import 'tv.dart';
 
 final auth = Auth();
 
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blueGrey,
       ),
-      home: const MyHomePage(title: 'Lichess Flutter Demo'),
+      home: const MyHomePage(title: 'Lichess Demo'),
     );
   }
 }
@@ -61,16 +62,31 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final Widget _profileOrLogin = isBusy
+        ? const CircularProgressIndicator()
+        : username != null
+            ? Profile(logoutAction, username!)
+            : Login(loginAction);
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
       ),
       body: Center(
-        child: isBusy
-            ? const CircularProgressIndicator()
-            : username != null
-                ? Profile(logoutAction, username!)
-                : Login(loginAction),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _profileOrLogin,
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => TV()),
+                );
+              },
+              child: const Text('Go to TV'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -108,7 +124,7 @@ class Profile extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        Text('Hello, $name'),
+        Text('Logged in as $name'),
         const SizedBox(height: 10.0),
         ElevatedButton(
           onPressed: () async {
