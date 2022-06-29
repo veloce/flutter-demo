@@ -39,7 +39,7 @@ dependencies:
   http: ^0.13.4
   chessground:
     git:
-      url: https://github.com/lichess-org/flutter_chessground.git
+      url: https://github.com/lichess-org/flutter-chessground.git
       ref: main
 
 dev_dependencies:
