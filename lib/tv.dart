@@ -84,6 +84,7 @@ class _TVState extends State<TV> {
             } else if (snapshot.connectionState == ConnectionState.waiting ||
                 snapshot.data == null) {
               return cg.Board(
+                theme: cg.BoardTheme.green,
                 size: screenWidth,
                 orientation: cg.Color.white,
                 fen: emptyFen,
@@ -100,6 +101,7 @@ class _TVState extends State<TV> {
                       ? Player(player: topPlayer, active: _turn == topPlayer.color)
                       : const SizedBox.shrink(),
                   cg.Board(
+                    theme: cg.BoardTheme.green,
                     size: screenWidth,
                     orientation: _orientation,
                     fen: snapshot.data!.fen,
@@ -176,7 +178,7 @@ class _CountdownClockState extends State<CountdownClock> {
     return Text(
         '$min:$secs',
         style: TextStyle(
-          color: widget.active ? Colors.orange : Colors.black54,
+          color: widget.active ? Colors.orange : Colors.grey,
           fontSize: 30,
           fontFeatures: const [
             FontFeature.tabularFigures(),
