@@ -16,16 +16,16 @@ class TV extends StatefulWidget {
 }
 
 class _TVState extends State<TV> {
-  late final Stream<FeaturedEvent> _featured;
+  final http.Client _client = http.Client();
+  late final Stream<FeaturedEvent> _tvStream;
   cg.Color _orientation = cg.Color.white;
   bh.Game? _game;
   cg.Color? _turn;
   FeaturedPlayer? _whitePlayer;
   FeaturedPlayer? _blackPlayer;
 
-  Stream<FeaturedEvent> getFeaturedEvent() async* {
-    final client = http.Client();
-    final resp = await client.send(
+  Stream<FeaturedEvent> startStreaming() async* {
+    final resp = await _client.send(
         http.Request('GET', Uri.parse('https://lichess.org/api/tv/feed')));
     yield* resp.stream
         .toStringStream()
@@ -67,7 +67,13 @@ class _TVState extends State<TV> {
   @override
   void initState() {
     super.initState();
-    _featured = getFeaturedEvent();
+    _tvStream = startStreaming();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _client.close();
   }
 
   @override
@@ -84,7 +90,7 @@ class _TVState extends State<TV> {
       ),
       body: Center(
         child: StreamBuilder<FeaturedEvent>(
-          stream: _featured,
+          stream: _tvStream,
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return const Text('Could not load tv stream');
