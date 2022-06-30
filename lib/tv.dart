@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:chessground/chessground.dart' as cg;
+import 'package:bishop/bishop.dart' as bh;
 import 'package:http/http.dart' as http;
 
 const emptyFen = '8/8/8/8/8/8/8/8 w - - 0 1';
@@ -17,6 +18,7 @@ class TV extends StatefulWidget {
 class _TVState extends State<TV> {
   late final Stream<FeaturedEvent> _featured;
   cg.Color _orientation = cg.Color.white;
+  bh.Game? _game;
   cg.Color? _turn;
   FeaturedPlayer? _whitePlayer;
   FeaturedPlayer? _blackPlayer;
@@ -51,6 +53,7 @@ class _TVState extends State<TV> {
           break;
       }
       final String fen = event['d']['fen'] ?? emptyFen;
+      _game = bh.Game(variant: bh.Variant.standard(), fen: fen);
       setState(() {
         final letter = fen.substring(fen.length - 1);
         _turn = letter == 'w' ? cg.Color.white : cg.Color.black;
@@ -70,6 +73,10 @@ class _TVState extends State<TV> {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
+    final bool ongoingGame = _game != null &&
+        !_game!.insufficientMaterial &&
+        !_game!.stalemate &&
+        !_game!.checkmate;
 
     return Scaffold(
       appBar: AppBar(
@@ -98,7 +105,9 @@ class _TVState extends State<TV> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   topPlayer != null
-                      ? Player(player: topPlayer, active: _turn == topPlayer.color)
+                      ? Player(
+                          player: topPlayer,
+                          active: ongoingGame && _turn == topPlayer.color)
                       : const SizedBox.shrink(),
                   cg.Board(
                     theme: cg.BoardTheme.green,
@@ -108,7 +117,9 @@ class _TVState extends State<TV> {
                     lastMove: snapshot.data!.lm,
                   ),
                   bottomPlayer != null
-                      ? Player(player: bottomPlayer, active: _turn == bottomPlayer.color)
+                      ? Player(
+                          player: bottomPlayer,
+                          active: ongoingGame && _turn == bottomPlayer.color)
                       : const SizedBox.shrink(),
                 ],
               );
@@ -124,7 +135,8 @@ class CountdownClock extends StatefulWidget {
   final int seconds;
   final bool active;
 
-  const CountdownClock({required this.seconds, required this.active, Key? key}) : super(key: key);
+  const CountdownClock({required this.seconds, required this.active, Key? key})
+      : super(key: key);
 
   @override
   State<CountdownClock> createState() => _CountdownClockState();
@@ -175,8 +187,7 @@ class _CountdownClockState extends State<CountdownClock> {
   Widget build(BuildContext context) {
     final min = timeLeft.inMinutes.remainder(60);
     final secs = timeLeft.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return Text(
-        '$min:$secs',
+    return Text('$min:$secs',
         style: TextStyle(
           color: widget.active ? Colors.orange : Colors.grey,
           fontSize: 30,
@@ -192,7 +203,8 @@ class Player extends StatelessWidget {
   final FeaturedPlayer player;
   final bool active;
 
-  const Player({required this.player, required this.active, Key? key}) : super(key: key);
+  const Player({required this.player, required this.active, Key? key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -220,7 +232,10 @@ class Player extends StatelessWidget {
                   rating,
                 ],
         ),
-        CountdownClock(seconds: player.seconds, active: active,),
+        CountdownClock(
+          seconds: player.seconds,
+          active: active,
+        ),
       ],
     );
   }
@@ -242,7 +257,7 @@ class FeaturedPlayer {
 
   FeaturedPlayer(
       {required this.color,
-        required this.name,
+      required this.name,
       this.title,
       required this.rating,
       required this.seconds});
