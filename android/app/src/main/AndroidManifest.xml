@@ -2,7 +2,7 @@
     package="org.lichess.flutter_demo">
    <uses-permission android:name="android.permission.INTERNET" />
    <application
-        android:label="flutter_demo"
+        android:label="Flutter Demo"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
