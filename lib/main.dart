@@ -10,6 +10,11 @@ void main() async {
   runApp(const MyApp());
 }
 
+final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
+  textStyle: const TextStyle(fontSize: 20),
+  fixedSize: const Size.fromWidth(200),
+);
+
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -78,13 +83,14 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             _profileOrLogin,
             ElevatedButton(
+              style: buttonStyle,
               onPressed: () {
                 Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => TV()),
+                  context,
+                  MaterialPageRoute(builder: (context) => const TV()),
                 );
               },
-              child: const Text('Go to TV'),
+              child: const Text('Watch TV'),
             ),
           ],
         ),
@@ -104,6 +110,7 @@ class Login extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         ElevatedButton(
+          style: buttonStyle,
           onPressed: () async {
             await loginAction();
           },
@@ -128,6 +135,7 @@ class Profile extends StatelessWidget {
         Text('Logged in as $name'),
         const SizedBox(height: 10.0),
         ElevatedButton(
+          style: buttonStyle,
           onPressed: () async {
             await logoutAction();
           },
