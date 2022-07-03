@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:chessground/chessground.dart' as cg;
 import 'package:bishop/bishop.dart' as bh;
 import 'package:http/http.dart' as http;
+import 'constants.dart';
 
 const emptyFen = '8/8/8/8/8/8/8/8 w - - 0 1';
 
@@ -23,58 +24,6 @@ class _TVState extends State<TV> {
   cg.Color? _turn;
   FeaturedPlayer? _whitePlayer;
   FeaturedPlayer? _blackPlayer;
-
-  Stream<FeaturedEvent> startStreaming() async* {
-    final resp = await _client.send(
-        http.Request('GET', Uri.parse('https://lichess.org/api/tv/feed')));
-    yield* resp.stream
-        .toStringStream()
-        .where((event) => event != '')
-        .map((event) => jsonDecode(event))
-        .map((event) {
-      switch (event['t']) {
-        case 'featured':
-          setState(() {
-            _orientation = event['d']['orientation'] == 'white'
-                ? cg.Color.white
-                : cg.Color.black;
-
-            _whitePlayer = FeaturedPlayer.fromJson(
-                event['d']['players'].firstWhere((p) => p['color'] == 'white'));
-            _blackPlayer = FeaturedPlayer.fromJson(
-                event['d']['players'].firstWhere((p) => p['color'] == 'black'));
-          });
-          break;
-        case 'fen':
-          setState(() {
-            _whitePlayer = _whitePlayer?.withSeconds(event['d']['wc']);
-            _blackPlayer = _blackPlayer?.withSeconds(event['d']['bc']);
-          });
-          break;
-      }
-      final String fen = event['d']['fen'] ?? emptyFen;
-      _game = bh.Game(variant: bh.Variant.standard(), fen: fen);
-      setState(() {
-        final letter = fen.substring(fen.length - 1);
-        _turn = letter == 'w' ? cg.Color.white : cg.Color.black;
-      });
-      final String? lm = event['d']['lm'];
-      return FeaturedEvent(
-          fen: fen, lm: lm != null ? cg.Move.fromUci(lm) : null);
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _tvStream = startStreaming();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _client.close();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -134,6 +83,58 @@ class _TVState extends State<TV> {
         ),
       ),
     );
+  }
+
+  Stream<FeaturedEvent> startStreaming() async* {
+    final resp = await _client.send(
+        http.Request('GET', Uri.parse('$kLichessHost/api/tv/feed')));
+    yield* resp.stream
+        .toStringStream()
+        .where((event) => event.isNotEmpty && event != '\n')
+        .map((event) => jsonDecode(event))
+        .map((event) {
+      switch (event['t']) {
+        case 'featured':
+          setState(() {
+            _orientation = event['d']['orientation'] == 'white'
+                ? cg.Color.white
+                : cg.Color.black;
+
+            _whitePlayer = FeaturedPlayer.fromJson(
+                event['d']['players'].firstWhere((p) => p['color'] == 'white'));
+            _blackPlayer = FeaturedPlayer.fromJson(
+                event['d']['players'].firstWhere((p) => p['color'] == 'black'));
+          });
+          break;
+        case 'fen':
+          setState(() {
+            _whitePlayer = _whitePlayer?.withSeconds(event['d']['wc']);
+            _blackPlayer = _blackPlayer?.withSeconds(event['d']['bc']);
+          });
+          break;
+      }
+      final String fen = event['d']['fen'] ?? emptyFen;
+      _game = bh.Game(variant: bh.Variant.standard(), fen: fen);
+      setState(() {
+        final letter = fen.substring(fen.length - 1);
+        _turn = letter == 'w' ? cg.Color.white : cg.Color.black;
+      });
+      final String? lm = event['d']['lm'];
+      return FeaturedEvent(
+          fen: fen, lm: lm != null ? cg.Move.fromUci(lm) : null);
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _tvStream = startStreaming();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _client.close();
   }
 }
 

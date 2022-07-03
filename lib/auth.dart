@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_appauth/flutter_appauth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'constants.dart';
 
-const lichessHost = 'https://lichess.org';
 const lichessClientId = 'lichess_flutter_demo';
 const redirectUri = 'org.lichess.flutterdemo://login-callback';
-const accountUrl = '$lichessHost/api/account';
+const accountUrl = '$kLichessHost/api/account';
 
 const _storage = FlutterSecureStorage();
 
@@ -34,9 +34,9 @@ class Auth {
         lichessClientId,
         redirectUri,
         serviceConfiguration: const AuthorizationServiceConfiguration(
-            authorizationEndpoint: '$lichessHost/oauth',
-            tokenEndpoint: '$lichessHost/api/token'),
-        scopes: ['email:read'],
+            authorizationEndpoint: '$kLichessHost/oauth',
+            tokenEndpoint: '$kLichessHost/api/token'),
+        scopes: ['board:play'],
       ));
       if (result != null) {
         developer.log('Got accessToken ${result.accessToken}');
@@ -54,7 +54,7 @@ class Auth {
     if (me != null) {
       final authHttp = AuthClient(http.Client());
       try {
-        await authHttp.delete(Uri.parse('$lichessHost/api/token'));
+        await authHttp.delete(Uri.parse('$kLichessHost/api/token'));
         await _storage.delete(key: lichessClientId);
         me = null;
       } finally {
@@ -66,7 +66,7 @@ class Auth {
   Future<void> _getMyAccount() async {
     final authHttp = AuthClient(http.Client());
     try {
-      final uri = Uri.parse('$lichessHost/api/account');
+      final uri = Uri.parse('$kLichessHost/api/account');
       developer.log('Calling: ' + uri.toString());
       final response = await authHttp.get(uri);
 

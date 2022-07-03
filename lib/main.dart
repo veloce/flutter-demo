@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'auth.dart';
 import 'tv.dart';
+import 'game.dart';
 
 final auth = Auth();
 
@@ -82,6 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _profileOrLogin,
+            const SizedBox(height: 10),
             ElevatedButton(
               style: buttonStyle,
               onPressed: () {
@@ -92,6 +94,18 @@ class _MyHomePageState extends State<MyHomePage> {
               },
               child: const Text('Watch TV'),
             ),
+            username != null
+                ? ElevatedButton(
+                    style: buttonStyle,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => Game(auth: auth)),
+                      );
+                    },
+                    child: const Text('Play maia1 bot'),
+                  )
+                : const SizedBox.shrink(),
           ],
         ),
       ),
