@@ -94,21 +94,32 @@ class _MyHomePageState extends State<MyHomePage> {
               },
               child: const Text('Watch TV'),
             ),
-            username != null
-                ? ElevatedButton(
-                    style: buttonStyle,
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => Game(auth: auth)),
-                      );
-                    },
-                    child: const Text('Play maia1 bot'),
-                  )
-                : const SizedBox.shrink(),
+            if (auth.me != null) PlayBotButton(me: auth.me!, bot: 'maia1'),
+            if (auth.me != null) PlayBotButton(me: auth.me!, bot: 'maia5'),
           ],
         ),
       ),
+    );
+  }
+}
+
+class PlayBotButton extends StatelessWidget {
+  final Me me;
+  final String bot;
+
+  const PlayBotButton({required this.me, required this.bot, Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      style: buttonStyle,
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => Game(me: me, bot: bot)),
+        );
+      },
+      child: Text('Play $bot bot'),
     );
   }
 }

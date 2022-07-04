@@ -8,9 +8,10 @@ import 'constants.dart';
 import 'widgets.dart';
 
 class Game extends StatefulWidget {
-  final Auth auth;
+  final Me me;
+  final String bot;
 
-  const Game({required this.auth, super.key});
+  const Game({required this.me, required this.bot, super.key});
 
   @override
   State<Game> createState() => _GameState();
@@ -26,7 +27,7 @@ class _GameState extends State<Game> {
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
     final pov =
-        _gameInfo?['black']['id'] == widget.auth.me?.id ? 'black' : 'white';
+        _gameInfo?['black']['id'] == widget.me.id ? 'black' : 'white';
     final orientation = pov == 'white' ? cg.Color.white : cg.Color.black;
     final Widget board = cg.Board(
       settings: cg.Settings(
@@ -167,7 +168,7 @@ class _GameState extends State<Game> {
   _createGame() async {
     await _listenToSiteEvents();
     _client.post(
-      Uri.parse('$kLichessHost/api/challenge/maia1'),
+      Uri.parse('$kLichessHost/api/challenge/${widget.bot}'),
       body: {
         'rated': 'false',
         // 'level': '1',
