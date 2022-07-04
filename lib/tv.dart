@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:chessground/chessground.dart' as cg;
 import 'package:bishop/bishop.dart' as bh;
 import 'package:http/http.dart' as http;
 import 'constants.dart';
+import 'widgets.dart';
 
 const emptyFen = '8/8/8/8/8/8/8/8 w - - 0 1';
 
@@ -61,7 +61,10 @@ class _TVState extends State<TV> {
                 children: [
                   topPlayer != null
                       ? Player(
-                          player: topPlayer,
+                          name: topPlayer.name,
+                          title: topPlayer.title,
+                          rating: topPlayer.rating,
+                          clock: Duration(seconds: topPlayer.seconds),
                           active: ongoingGame && _turn == topPlayer.color)
                       : const SizedBox.shrink(),
                   cg.Board(
@@ -73,7 +76,10 @@ class _TVState extends State<TV> {
                   ),
                   bottomPlayer != null
                       ? Player(
-                          player: bottomPlayer,
+                          name: bottomPlayer.name,
+                          title: bottomPlayer.title,
+                          rating: bottomPlayer.rating,
+                          clock: Duration(seconds: bottomPlayer.seconds),
                           active: ongoingGame && _turn == bottomPlayer.color)
                       : const SizedBox.shrink(),
                 ],
@@ -86,8 +92,8 @@ class _TVState extends State<TV> {
   }
 
   Stream<FeaturedEvent> startStreaming() async* {
-    final resp = await _client.send(
-        http.Request('GET', Uri.parse('$kLichessHost/api/tv/feed')));
+    final resp = await _client
+        .send(http.Request('GET', Uri.parse('$kLichessHost/api/tv/feed')));
     yield* resp.stream
         .toStringStream()
         .where((event) => event.isNotEmpty && event != '\n')
@@ -135,116 +141,6 @@ class _TVState extends State<TV> {
   void dispose() {
     super.dispose();
     _client.close();
-  }
-}
-
-class CountdownClock extends StatefulWidget {
-  final int seconds;
-  final bool active;
-
-  const CountdownClock({required this.seconds, required this.active, Key? key})
-      : super(key: key);
-
-  @override
-  State<CountdownClock> createState() => _CountdownClockState();
-}
-
-class _CountdownClockState extends State<CountdownClock> {
-  static const _period = Duration(milliseconds: 100);
-  Timer? _timer;
-  late Duration timeLeft;
-
-  Timer startTimer() {
-    return Timer.periodic(_period, (timer) {
-      setState(() {
-        timeLeft = timeLeft - _period;
-        if (timeLeft <= Duration.zero) {
-          timer.cancel();
-        }
-      });
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    timeLeft = Duration(seconds: widget.seconds);
-    if (widget.active) {
-      _timer = startTimer();
-    }
-  }
-
-  @override
-  void didUpdateWidget(CountdownClock oldClock) {
-    super.didUpdateWidget(oldClock);
-    _timer?.cancel();
-    timeLeft = Duration(seconds: widget.seconds);
-    if (widget.active) {
-      _timer = startTimer();
-    }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _timer?.cancel();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final min = timeLeft.inMinutes.remainder(60);
-    final secs = timeLeft.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return Text('$min:$secs',
-        style: TextStyle(
-          color: widget.active ? Colors.orange : Colors.grey,
-          fontSize: 30,
-          fontFeatures: const [
-            FontFeature.tabularFigures(),
-            FontFeature.slashedZero()
-          ],
-        ));
-  }
-}
-
-class Player extends StatelessWidget {
-  final FeaturedPlayer player;
-  final bool active;
-
-  const Player({required this.player, required this.active, Key? key})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final Widget name = Text(player.name,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600));
-    final Widget rating =
-        Text(player.rating.toString(), style: const TextStyle(fontSize: 13));
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: player.title != null
-              ? [
-                  Text(player.title!,
-                      style:
-                          const TextStyle(fontSize: 20, color: Colors.orange)),
-                  const SizedBox(width: 5),
-                  name,
-                  const SizedBox(width: 3),
-                  rating,
-                ]
-              : [
-                  name,
-                  const SizedBox(width: 3),
-                  rating,
-                ],
-        ),
-        CountdownClock(
-          seconds: player.seconds,
-          active: active,
-        ),
-      ],
-    );
   }
 }
 

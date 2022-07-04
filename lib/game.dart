@@ -5,6 +5,7 @@ import 'package:bishop/bishop.dart' as bh;
 import 'package:chessground/chessground.dart' as cg;
 import 'auth.dart';
 import 'constants.dart';
+import 'widgets.dart';
 
 class Game extends StatefulWidget {
   final Auth auth;
@@ -24,30 +25,68 @@ class _GameState extends State<Game> {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final pov = _gameInfo?['black']['id'] == widget.auth.me?.id
-        ? cg.Color.black
-        : cg.Color.white;
+    final pov =
+        _gameInfo?['black']['id'] == widget.auth.me?.id ? 'black' : 'white';
+    final orientation = pov == 'white' ? cg.Color.white : cg.Color.black;
+    final Widget board = cg.Board(
+      settings: cg.Settings(
+        interactable: _gameState != null,
+        interactableColor: pov == 'white'
+            ? cg.InteractableColor.white
+            : cg.InteractableColor.black,
+      ),
+      theme: cg.BoardTheme.green,
+      size: screenWidth,
+      orientation: orientation,
+      validMoves: _gameState?.validMoves,
+      fen: _gameState?.fen ?? '8/8/8/8/8/8/8/8 w - - 0 1',
+      lastMove: _gameState?.lastMove,
+      turnColor: _gameState?.turn ?? orientation,
+      onMove: _onMove,
+    );
+    final topPlayerColor = pov == 'white' ? 'black' : 'white';
+    final Widget topPlayer = _gameInfo != null
+        ? Player(
+            name: _gameInfo![topPlayerColor]['name'],
+            rating: _gameInfo![topPlayerColor]['rating'],
+            title: _gameInfo![topPlayerColor]['title'],
+            active: _gameState?.status == 'started' &&
+                _gameState?.turn != orientation,
+            clock: Duration(
+                milliseconds:
+                    (pov == 'white' ? _gameState?.btime : _gameState?.wtime) ??
+                        0),
+          )
+        : const SizedBox.shrink();
+    final Widget bottomPlayer = _gameInfo != null
+        ? Player(
+            name: _gameInfo![pov]['name'],
+            rating: _gameInfo![pov]['rating'],
+            title: _gameInfo![pov]['title'],
+            active: _gameState?.status == 'started' &&
+                _gameState?.turn == orientation,
+            clock: Duration(
+                milliseconds:
+                    (pov == 'white' ? _gameState?.wtime : _gameState?.btime) ??
+                        0),
+          )
+        : const SizedBox.shrink();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Casual 5 | 5 against maia1'),
       ),
       body: Center(
-        child: cg.Board(
-          settings: cg.Settings(
-            interactable: _gameState != null,
-            interactableColor: pov == cg.Color.white
-                ? cg.InteractableColor.white
-                : cg.InteractableColor.black,
-          ),
-          theme: cg.BoardTheme.green,
-          size: screenWidth,
-          orientation: pov,
-          validMoves: _gameState?.validMoves,
-          fen: _gameState?.fen ?? '8/8/8/8/8/8/8/8 w - - 0 1',
-          lastMove: _gameState?.lastMove,
-          turnColor: _gameState?.turn ?? pov,
-          onMove: _onMove,
-        ),
+        child: _gameInfo != null
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  topPlayer,
+                  board,
+                  bottomPlayer,
+                ],
+              )
+            : board,
       ),
     );
   }
