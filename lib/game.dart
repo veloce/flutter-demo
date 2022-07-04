@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -110,7 +111,6 @@ class _GameState extends State<Game> {
         .toStringStream()
         .where((event) => event.isNotEmpty && event != '\n')
         .map((event) {
-      debugPrint('site event: ' + event);
       return jsonDecode(event);
     }).forEach((event) {
       switch (event['type']) {
@@ -150,7 +150,7 @@ class _GameState extends State<Game> {
           break;
       }
       if (state != null) {
-        debugPrint('game event ' + jsonEncode(state));
+        developer.log('[GAME STREAM] ' + jsonEncode(state));
         final gs = GameState(
             moves: state['moves'],
             wtime: state['wtime'],
