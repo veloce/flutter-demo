@@ -8,6 +8,14 @@ import 'auth.dart';
 import 'constants.dart';
 import 'widgets.dart';
 
+extension StringExtension on String {
+  String capitalize() {
+    return '${this[0].toUpperCase()}${substring(1).toLowerCase()}';
+  }
+}
+
+enum BottomMenu { abort, resign, play }
+
 class Game extends StatefulWidget {
   final Me me;
   final String bot;
@@ -27,12 +35,11 @@ class _GameState extends State<Game> {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final pov =
-        _gameInfo?['black']['id'] == widget.me.id ? 'black' : 'white';
+    final pov = _gameInfo?['black']['id'] == widget.me.id ? 'black' : 'white';
     final orientation = pov == 'white' ? cg.Color.white : cg.Color.black;
     final Widget board = cg.Board(
       settings: cg.Settings(
-        interactable: _gameState != null,
+        interactable: _gameState != null && _gameState!.playing,
         interactableColor: pov == 'white'
             ? cg.InteractableColor.white
             : cg.InteractableColor.black,
@@ -66,7 +73,8 @@ class _GameState extends State<Game> {
             rating: _gameInfo![pov]['rating'],
             title: _gameInfo![pov]['title'],
             active: _gameState?.status == 'started' &&
-                _gameState?.turn == orientation,
+                _gameState?.turn == orientation &&
+                _gameState!.halfmoves >= 1,
             clock: Duration(
                 milliseconds:
                     (pov == 'white' ? _gameState?.wtime : _gameState?.btime) ??
@@ -90,6 +98,53 @@ class _GameState extends State<Game> {
               )
             : board,
       ),
+      bottomNavigationBar: _gameState != null
+          ? BottomAppBar(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  PopupMenuButton<BottomMenu>(
+                    icon: const Icon(Icons.menu, size: 32.0),
+                    onSelected: (BottomMenu item) {
+                      switch (item) {
+                        case BottomMenu.abort:
+                        case BottomMenu.resign:
+                          _resign();
+                          break;
+                        case BottomMenu.play:
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    Game(me: widget.me, bot: widget.bot)),
+                          );
+                      }
+                    },
+                    itemBuilder: (BuildContext context) =>
+                        <PopupMenuEntry<BottomMenu>>[
+                      if (_gameState!.abortable)
+                        const PopupMenuItem<BottomMenu>(
+                          value: BottomMenu.abort,
+                          child: Text('Abort'),
+                        ),
+                      if (_gameState!.resignable)
+                        const PopupMenuItem<BottomMenu>(
+                          value: BottomMenu.resign,
+                          child: Text('Resign'),
+                        ),
+                      if (!_gameState!.playing)
+                        const PopupMenuItem<BottomMenu>(
+                          value: BottomMenu.play,
+                          child: Text('Play another one'),
+                        ),
+                    ],
+                  ),
+                  Text(_gameState!.status.capitalize()),
+                  const SizedBox(width: 32.0),
+                ],
+              ),
+            )
+          : const SizedBox.shrink(),
     );
   }
 
@@ -102,6 +157,12 @@ class _GameState extends State<Game> {
             '$kLichessHost/api/board/game/${_gameInfo!['id']}/move/${move.uci}'),
       );
     }
+  }
+
+  Future<void> _resign() async {
+    await _client.post(
+      Uri.parse('$kLichessHost/api/board/game/${_gameInfo!['id']}/resign'),
+    );
   }
 
   Future<void> _listenToSiteEvents() async {
@@ -166,6 +227,7 @@ class _GameState extends State<Game> {
   }
 
   _createGame() async {
+    await Future.delayed(const Duration(milliseconds: 200));
     await _listenToSiteEvents();
     _client.post(
       Uri.parse('$kLichessHost/api/challenge/${widget.bot}'),
@@ -235,6 +297,11 @@ class GameState {
           to: bh.squareName(_game.state.move!.to))
       : null;
   cg.ValidMoves? get validMoves => _validMoves;
+  bool get abortable => status == 'started' && _game.state.fullMoves < 1;
+  bool get resignable => status == 'started' && _game.state.fullMoves > 1;
+  bool get playing => status == 'started';
+  int get fullmoves => _game.state.fullMoves;
+  int get halfmoves => _game.history.length;
 
   cg.ValidMoves _makeValidMoves() {
     final cg.ValidMoves result = {};

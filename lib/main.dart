@@ -5,6 +5,8 @@ import 'game.dart';
 
 final auth = Auth();
 
+enum AppBarMenu { login, logout }
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await auth.init();
@@ -77,6 +79,33 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        actions: [
+          PopupMenuButton<AppBarMenu>(
+            icon: const Icon(Icons.person),
+            onSelected: (AppBarMenu item) {
+              switch (item) {
+                case AppBarMenu.login:
+                  loginAction();
+                  break;
+                case AppBarMenu.logout:
+                  logoutAction();
+                  break;
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<AppBarMenu>>[
+              if (username != null)
+                const PopupMenuItem<AppBarMenu>(
+                  value: AppBarMenu.logout,
+                  child: Text('Logout'),
+                ),
+              if (username == null)
+                const PopupMenuItem<AppBarMenu>(
+                  value: AppBarMenu.login,
+                  child: Text('Login'),
+                ),
+            ],
+          ),
+        ],
       ),
       body: Center(
         child: Column(
@@ -107,7 +136,8 @@ class PlayBotButton extends StatelessWidget {
   final Me me;
   final String bot;
 
-  const PlayBotButton({required this.me, required this.bot, Key? key}) : super(key: key);
+  const PlayBotButton({required this.me, required this.bot, Key? key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -158,14 +188,6 @@ class Profile extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         Text('Logged in as $name'),
-        const SizedBox(height: 10.0),
-        ElevatedButton(
-          style: buttonStyle,
-          onPressed: () async {
-            await logoutAction();
-          },
-          child: const Text('Logout'),
-        ),
       ],
     );
   }
