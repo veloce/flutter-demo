@@ -98,53 +98,51 @@ class _GameState extends State<Game> {
               )
             : board,
       ),
-      bottomNavigationBar: _gameState != null
-          ? BottomAppBar(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  PopupMenuButton<BottomMenu>(
-                    icon: const Icon(Icons.menu, size: 32.0),
-                    onSelected: (BottomMenu item) {
-                      switch (item) {
-                        case BottomMenu.abort:
-                        case BottomMenu.resign:
-                          _resign();
-                          break;
-                        case BottomMenu.play:
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    Game(me: widget.me, bot: widget.bot)),
-                          );
-                      }
-                    },
-                    itemBuilder: (BuildContext context) =>
-                        <PopupMenuEntry<BottomMenu>>[
-                      if (_gameState!.abortable)
-                        const PopupMenuItem<BottomMenu>(
-                          value: BottomMenu.abort,
-                          child: Text('Abort'),
-                        ),
-                      if (_gameState!.resignable)
-                        const PopupMenuItem<BottomMenu>(
-                          value: BottomMenu.resign,
-                          child: Text('Resign'),
-                        ),
-                      if (!_gameState!.playing)
-                        const PopupMenuItem<BottomMenu>(
-                          value: BottomMenu.play,
-                          child: Text('Play another one'),
-                        ),
-                    ],
+      bottomNavigationBar: BottomAppBar(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            PopupMenuButton<BottomMenu>(
+              icon: const Icon(Icons.menu, size: 32.0),
+              onSelected: (BottomMenu item) {
+                switch (item) {
+                  case BottomMenu.abort:
+                  case BottomMenu.resign:
+                    _resign();
+                    break;
+                  case BottomMenu.play:
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              Game(me: widget.me, bot: widget.bot)),
+                    );
+                }
+              },
+              itemBuilder: (BuildContext context) =>
+                  <PopupMenuEntry<BottomMenu>>[
+                if (_gameState == null || _gameState!.abortable)
+                  const PopupMenuItem<BottomMenu>(
+                    value: BottomMenu.abort,
+                    child: Text('Abort'),
                   ),
-                  Text(_gameState!.status.capitalize()),
-                  const SizedBox(width: 32.0),
-                ],
-              ),
-            )
-          : const SizedBox.shrink(),
+                if (_gameState?.resignable == true)
+                  const PopupMenuItem<BottomMenu>(
+                    value: BottomMenu.resign,
+                    child: Text('Resign'),
+                  ),
+                if (_gameState?.playing == false)
+                  const PopupMenuItem<BottomMenu>(
+                    value: BottomMenu.play,
+                    child: Text('Play another one'),
+                  ),
+              ],
+            ),
+            Text(_gameState?.status.capitalize() ?? ''),
+            const SizedBox(width: 32.0),
+          ],
+        ),
+      ),
     );
   }
 

@@ -30,8 +30,7 @@ class _TVState extends State<TV> {
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool ongoingGame = _game != null &&
         !_game!.insufficientMaterial &&
-        !_game!.stalemate &&
-        !_game!.checkmate;
+        _game!.generateLegalMoves().isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
