@@ -74,7 +74,7 @@ class _GameState extends State<Game> {
             title: _gameInfo![pov]['title'],
             active: _gameState?.status == 'started' &&
                 _gameState?.turn == orientation &&
-                _gameState!.halfmoves >= 1,
+                (_gameState!.fullmoves > 1 || pov == 'black'),
             clock: Duration(
                 milliseconds:
                     (pov == 'white' ? _gameState?.wtime : _gameState?.btime) ??
@@ -227,7 +227,7 @@ class _GameState extends State<Game> {
   }
 
   _createGame() async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 100));
     await _listenToSiteEvents();
     _client.post(
       Uri.parse('$kLichessHost/api/challenge/${widget.bot}'),
@@ -301,7 +301,6 @@ class GameState {
   bool get resignable => status == 'started' && _game.state.fullMoves > 1;
   bool get playing => status == 'started';
   int get fullmoves => _game.state.fullMoves;
-  int get halfmoves => _game.history.length;
 
   cg.ValidMoves _makeValidMoves() {
     final cg.ValidMoves result = {};
