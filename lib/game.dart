@@ -2,6 +2,7 @@ import 'dart:developer' as developer;
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/retry.dart';
 import 'package:bishop/bishop.dart' as bh;
 import 'package:chessground/chessground.dart' as cg;
 import 'auth.dart';
@@ -13,6 +14,12 @@ extension StringExtension on String {
     return '${this[0].toUpperCase()}${substring(1).toLowerCase()}';
   }
 }
+
+const httpRetries = [
+  Duration(milliseconds: 200),
+  Duration(milliseconds: 300),
+  Duration(milliseconds: 500),
+];
 
 enum BottomMenu { abort, resign, play }
 
@@ -147,20 +154,39 @@ class _GameState extends State<Game> {
   }
 
   void _onMove(cg.Move move) async {
+    final c = RetryClient.withDelays(
+      AuthClient(http.Client()),
+      httpRetries,
+      whenError: (o, s) => true,
+    );
+
     final ok = _gameState!.playMove(move);
     if (ok) {
       setState(() {});
-      await _client.post(
-        Uri.parse(
-            '$kLichessHost/api/board/game/${_gameInfo!['id']}/move/${move.uci}'),
-      );
+      try {
+        await c.post(
+          Uri.parse(
+              '$kLichessHost/api/board/game/${_gameInfo!['id']}/move/${move.uci}'),
+        );
+      } finally {
+        c.close();
+      }
     }
   }
 
   Future<void> _resign() async {
-    await _client.post(
-      Uri.parse('$kLichessHost/api/board/game/${_gameInfo!['id']}/resign'),
+    final c = RetryClient.withDelays(
+      AuthClient(http.Client()),
+      httpRetries,
+      whenError: (o, s) => true,
     );
+    try {
+      await _client.post(
+        Uri.parse('$kLichessHost/api/board/game/${_gameInfo!['id']}/resign'),
+      );
+    } finally {
+      c.close();
+    }
   }
 
   Future<void> _listenToSiteEvents() async {
