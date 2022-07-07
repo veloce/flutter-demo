@@ -24,31 +24,34 @@ class Player extends StatelessWidget {
         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600));
     final Widget _rating =
         Text(rating.toString(), style: const TextStyle(fontSize: 13));
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: title != null
-              ? [
-                  Text(title!,
-                      style:
-                          const TextStyle(fontSize: 20, color: Colors.orange)),
-                  const SizedBox(width: 5),
-                  _name,
-                  const SizedBox(width: 3),
-                  _rating,
-                ]
-              : [
-                  _name,
-                  const SizedBox(width: 3),
-                  _rating,
-                ],
-        ),
-        CountdownClock(
-          duration: clock,
-          active: active,
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.all(5.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: title != null
+                ? [
+                    Text(title!,
+                        style: const TextStyle(
+                            fontSize: 20, color: Colors.orange)),
+                    const SizedBox(width: 5),
+                    _name,
+                    const SizedBox(width: 3),
+                    _rating,
+                  ]
+                : [
+                    _name,
+                    const SizedBox(width: 3),
+                    _rating,
+                  ],
+          ),
+          CountdownClock(
+            duration: clock,
+            active: active,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -109,13 +112,21 @@ class _CountdownClockState extends State<CountdownClock> {
   Widget build(BuildContext context) {
     final min = timeLeft.inMinutes.remainder(60);
     final secs = timeLeft.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return Text('$min:$secs',
-        style: TextStyle(
-          color: widget.active ? Colors.orange : Colors.grey,
-          fontSize: 30,
-          fontFeatures: const [
-            FontFeature.tabularFigures(),
-          ],
-        ));
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(5.0),
+        color: widget.active ? Colors.white : Colors.black,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 5.0),
+        child: Text('$min:$secs',
+          style: TextStyle(
+            color: widget.active ? Colors.black : Colors.grey,
+            fontSize: 30,
+            fontFeatures: const [
+              FontFeature.tabularFigures(),
+            ],
+          ))),
+    );
   }
 }
