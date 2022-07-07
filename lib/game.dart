@@ -93,7 +93,7 @@ class _GameState extends State<Game> {
         : const SizedBox.shrink();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Casual 5 | 5 against maia1'), actions: [
+      appBar: AppBar(title: Text('Casual 5|5 ${widget.bot}'), actions: [
         IconButton(
             icon: sound.isMuted()
                 ? const Icon(Icons.volume_off)
