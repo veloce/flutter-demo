@@ -79,6 +79,8 @@ class _TVState extends State<TV> {
                           active: ongoingGame && _turn == topPlayer.color)
                       : const SizedBox.shrink(),
                   cg.Board(
+                    settings: const cg.Settings(
+                        animationDuration: Duration(milliseconds: 100)),
                     theme: cg.BoardTheme.green,
                     size: screenWidth,
                     orientation: _orientation,
