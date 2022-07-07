@@ -8,12 +8,15 @@ import 'package:chessground/chessground.dart' as cg;
 import 'auth.dart';
 import 'constants.dart';
 import 'widgets.dart';
+import 'sound.dart' as sound;
 
 extension StringExtension on String {
   String capitalize() {
     return '${this[0].toUpperCase()}${substring(1).toLowerCase()}';
   }
 }
+
+const startingFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 const httpRetries = [
   Duration(milliseconds: 200),
@@ -90,9 +93,17 @@ class _GameState extends State<Game> {
         : const SizedBox.shrink();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Casual 5 | 5 against maia1'),
-      ),
+      appBar: AppBar(title: const Text('Casual 5 | 5 against maia1'), actions: [
+        IconButton(
+            icon: sound.isMuted()
+                ? const Icon(Icons.volume_off)
+                : const Icon(Icons.volume_up),
+            onPressed: () {
+              setState(() {
+                sound.toggle();
+              });
+            }),
+      ]),
       body: Center(
         child: _gameInfo != null
             ? Column(
@@ -163,6 +174,11 @@ class _GameState extends State<Game> {
     final ok = _gameState!.playMove(move);
     if (ok) {
       setState(() {});
+      if (_gameState!.lastMoveCapture) {
+        sound.playCapture();
+      } else {
+        sound.playMove();
+      }
       try {
         await c.post(
           Uri.parse(
@@ -243,6 +259,13 @@ class _GameState extends State<Game> {
             winc: state['winc'],
             binc: state['binc'],
             status: state['status']);
+        if (gs.fen != startingFen && _gameState?.fen != gs.fen) {
+          if (gs.lastMoveCapture) {
+            sound.playCapture();
+          } else {
+            sound.playMove();
+          }
+        }
         setState(() {
           _gameState = gs;
         });
@@ -325,6 +348,7 @@ class GameState {
   bool get resignable => status == 'started' && _game.state.fullMoves > 1;
   bool get playing => status == 'started';
   int get fullmoves => _game.state.fullMoves;
+  bool get lastMoveCapture => _game.state.move?.capturedPiece != null;
 
   cg.ValidMoves _makeValidMoves() {
     final cg.ValidMoves result = {};

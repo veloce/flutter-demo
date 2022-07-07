@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'auth.dart';
 import 'tv.dart';
 import 'game.dart';
+import 'sound.dart' as sound;
 
 final auth = Auth();
 
@@ -10,6 +11,7 @@ enum AppBarMenu { login, logout }
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await auth.init();
+  await sound.init();
   runApp(const MyApp());
 }
 

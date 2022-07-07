@@ -6,6 +6,7 @@ import 'package:bishop/bishop.dart' as bh;
 import 'package:http/http.dart' as http;
 import 'constants.dart';
 import 'widgets.dart';
+import 'sound.dart' as sound;
 
 const emptyFen = '8/8/8/8/8/8/8/8 w - - 0 1';
 
@@ -35,6 +36,17 @@ class _TVState extends State<TV> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lichess TV'),
+        actions: [
+          IconButton(
+              icon: sound.isMuted()
+                  ? const Icon(Icons.volume_off)
+                  : const Icon(Icons.volume_up),
+              onPressed: () {
+                setState(() {
+                  sound.toggle();
+                });
+              }),
+        ],
       ),
       body: Center(
         child: StreamBuilder<FeaturedEvent>(
@@ -116,6 +128,7 @@ class _TVState extends State<TV> {
             _whitePlayer = _whitePlayer?.withSeconds(event['d']['wc']);
             _blackPlayer = _blackPlayer?.withSeconds(event['d']['bc']);
           });
+          sound.playMove();
           break;
       }
       final String fen = event['d']['fen'] ?? emptyFen;
