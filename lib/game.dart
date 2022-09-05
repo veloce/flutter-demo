@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/retry.dart';
-import 'package:bishop/bishop.dart' as bh;
+import 'package:dartchess/dartchess.dart';
 import 'package:chessground/chessground.dart' as cg;
 import 'auth.dart';
 import 'constants.dart';
@@ -50,9 +50,7 @@ class _GameState extends State<Game> {
     final Widget board = cg.Board(
       settings: cg.Settings(
         interactable: _gameState != null && _gameState!.playing,
-        interactableColor: pov == 'white'
-            ? cg.InteractableColor.white
-            : cg.InteractableColor.black,
+        interactableColor: pov == 'white' ? cg.InteractableColor.white : cg.InteractableColor.black,
       ),
       theme: cg.BoardTheme.green,
       size: screenWidth,
@@ -69,12 +67,9 @@ class _GameState extends State<Game> {
             name: _gameInfo![topPlayerColor]['name'],
             rating: _gameInfo![topPlayerColor]['rating'],
             title: _gameInfo![topPlayerColor]['title'],
-            active: _gameState?.status == 'started' &&
-                _gameState?.turn != orientation,
+            active: _gameState?.status == 'started' && _gameState?.turn != orientation,
             clock: Duration(
-                milliseconds:
-                    (pov == 'white' ? _gameState?.btime : _gameState?.wtime) ??
-                        0),
+                milliseconds: (pov == 'white' ? _gameState?.btime : _gameState?.wtime) ?? 0),
           )
         : const SizedBox.shrink();
     final Widget bottomPlayer = _gameInfo != null
@@ -86,18 +81,14 @@ class _GameState extends State<Game> {
                 _gameState?.turn == orientation &&
                 (_gameState!.fullmoves > 1 || pov == 'black'),
             clock: Duration(
-                milliseconds:
-                    (pov == 'white' ? _gameState?.wtime : _gameState?.btime) ??
-                        0),
+                milliseconds: (pov == 'white' ? _gameState?.wtime : _gameState?.btime) ?? 0),
           )
         : const SizedBox.shrink();
 
     return Scaffold(
       appBar: AppBar(title: Text('Casual 5|5 ${widget.bot}'), actions: [
         IconButton(
-            icon: sound.isMuted()
-                ? const Icon(Icons.volume_off)
-                : const Icon(Icons.volume_up),
+            icon: sound.isMuted() ? const Icon(Icons.volume_off) : const Icon(Icons.volume_up),
             onPressed: () {
               setState(() {
                 sound.toggle();
@@ -131,14 +122,11 @@ class _GameState extends State<Game> {
                   case BottomMenu.play:
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              Game(me: widget.me, bot: widget.bot)),
+                      MaterialPageRoute(builder: (context) => Game(me: widget.me, bot: widget.bot)),
                     );
                 }
               },
-              itemBuilder: (BuildContext context) =>
-                  <PopupMenuEntry<BottomMenu>>[
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<BottomMenu>>[
                 if (_gameState == null || _gameState!.abortable)
                   const PopupMenuItem<BottomMenu>(
                     value: BottomMenu.abort,
@@ -174,15 +162,14 @@ class _GameState extends State<Game> {
     final ok = _gameState!.playMove(move);
     if (ok) {
       setState(() {});
-      if (_gameState!.lastMoveCapture) {
+      if (_gameState!.isLastMoveCapture) {
         sound.playCapture();
       } else {
         sound.playMove();
       }
       try {
         await c.post(
-          Uri.parse(
-              '$kLichessHost/api/board/game/${_gameInfo!['id']}/move/${move.uci}'),
+          Uri.parse('$kLichessHost/api/board/game/${_gameInfo!['id']}/move/${move.uci}'),
         );
       } finally {
         c.close();
@@ -206,12 +193,9 @@ class _GameState extends State<Game> {
   }
 
   Future<void> _listenToSiteEvents() async {
-    final resp = await _client
-        .send(http.Request('GET', Uri.parse('$kLichessHost/api/stream/event')));
-    resp.stream
-        .toStringStream()
-        .where((event) => event.isNotEmpty && event != '\n')
-        .map((event) {
+    final resp =
+        await _client.send(http.Request('GET', Uri.parse('$kLichessHost/api/stream/event')));
+    resp.stream.toStringStream().where((event) => event.isNotEmpty && event != '\n').map((event) {
       return jsonDecode(event);
     }).forEach((event) {
       switch (event['type']) {
@@ -230,8 +214,8 @@ class _GameState extends State<Game> {
   }
 
   void _listenToGameEvents(String id) async {
-    final resp = await _client.send(http.Request(
-        'GET', Uri.parse('$kLichessHost/api/board/game/stream/$id')));
+    final resp = await _client
+        .send(http.Request('GET', Uri.parse('$kLichessHost/api/board/game/stream/$id')));
     resp.stream
         .toStringStream()
         .where((event) => event.isNotEmpty && event != '\n')
@@ -260,7 +244,7 @@ class _GameState extends State<Game> {
             binc: state['binc'],
             status: state['status']);
         if (gs.fen != startingFen && _gameState?.fen != gs.fen) {
-          if (gs.lastMoveCapture) {
+          if (gs.isLastMoveCapture) {
             sound.playCapture();
           } else {
             sound.playMove();
@@ -309,7 +293,7 @@ class GameState {
   final String status;
 
   final List<String> _moveList;
-  final bh.Game _game = bh.Game(variant: bh.Variant.standard());
+  Chess _game = Chess.initial;
 
   late final cg.ValidMoves _validMoves;
 
@@ -322,45 +306,42 @@ class GameState {
       required this.status})
       : _moveList = moves.split(' ').where((m) => m.isNotEmpty).toList() {
     for (final m in _moveList) {
-      final bh.Move? _m = _game.getMove(m);
-      if (_m != null) {
-        _game.makeMove(_m);
-      }
+      final move = Move.fromUci(m);
+      _game = _game.play(move);
     }
 
     _validMoves = _makeValidMoves();
   }
 
   bool playMove(cg.Move move) {
-    bh.Move? m = _game.getMove(move.uci);
-    return m != null ? _game.makeMove(m) : false;
+    try {
+      _game = _game.play(Move.fromUci(move.uci));
+      _moveList.add(move.uci);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   String get fen => _game.fen;
-  cg.Color get turn => _game.turn == bh.WHITE ? cg.Color.white : cg.Color.black;
-  cg.Move? get lastMove => _game.state.move != null
-      ? cg.Move(
-          from: bh.squareName(_game.state.move!.from),
-          to: bh.squareName(_game.state.move!.to))
-      : null;
+  cg.Color get turn => _game.turn == Color.white ? cg.Color.white : cg.Color.black;
+  cg.Move? get lastMove =>
+      _moveList.isNotEmpty ? cg.Move.fromUci(_moveList[_moveList.length - 1]) : null;
   cg.ValidMoves? get validMoves => _validMoves;
-  bool get abortable => status == 'started' && _game.state.fullMoves < 1;
-  bool get resignable => status == 'started' && _game.state.fullMoves > 1;
+  bool get abortable => status == 'started' && _game.fullmoves < 1;
+  bool get resignable => status == 'started' && _game.fullmoves > 1;
   bool get playing => status == 'started';
-  int get fullmoves => _game.state.fullMoves;
-  bool get lastMoveCapture => _game.state.move?.capturedPiece != null;
+  int get fullmoves => _game.fullmoves;
+  bool get isLastMoveCapture {
+    // TODO
+    return false;
+  }
 
   cg.ValidMoves _makeValidMoves() {
     final cg.ValidMoves result = {};
-    final legalMoves = _game.generateLegalMoves();
-    for (bh.Move m in legalMoves) {
-      final fromSquare = bh.squareName(m.from);
-      final toSquare = bh.squareName(m.to);
-      if (!result.containsKey(fromSquare)) {
-        result[fromSquare] = {toSquare};
-      } else {
-        result[fromSquare]!.add(toSquare);
-      }
+    for (final entry in _game.legalMoves.entries) {
+      final fromSquare = makeSquare(entry.key);
+      result[fromSquare] = entry.value.squares.map((e) => makeSquare(e)).toSet();
     }
     return result;
   }

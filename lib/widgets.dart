@@ -20,10 +20,9 @@ class Player extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Widget _name = Text(name,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600));
-    final Widget _rating =
-        Text(rating.toString(), style: const TextStyle(fontSize: 13));
+    final Widget _name =
+        Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600));
+    final Widget _rating = Text(rating.toString(), style: const TextStyle(fontSize: 13));
     return Padding(
       padding: const EdgeInsets.all(5.0),
       child: Row(
@@ -32,9 +31,7 @@ class Player extends StatelessWidget {
           Row(
             children: title != null
                 ? [
-                    Text(title!,
-                        style: const TextStyle(
-                            fontSize: 20, color: Colors.orange)),
+                    Text(title!, style: const TextStyle(fontSize: 20, color: Colors.orange)),
                     const SizedBox(width: 5),
                     _name,
                     const SizedBox(width: 3),
@@ -60,8 +57,7 @@ class CountdownClock extends StatefulWidget {
   final Duration duration;
   final bool active;
 
-  const CountdownClock({required this.duration, required this.active, Key? key})
-      : super(key: key);
+  const CountdownClock({required this.duration, required this.active, Key? key}) : super(key: key);
 
   @override
   State<CountdownClock> createState() => _CountdownClockState();
@@ -118,15 +114,15 @@ class _CountdownClockState extends State<CountdownClock> {
         color: widget.active ? Colors.white : Colors.black,
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 5.0),
-        child: Text('$min:$secs',
-          style: TextStyle(
-            color: widget.active ? Colors.black : Colors.grey,
-            fontSize: 30,
-            fontFeatures: const [
-              FontFeature.tabularFigures(),
-            ],
-          ))),
+          padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 5.0),
+          child: Text('$min:$secs',
+              style: TextStyle(
+                color: widget.active ? Colors.black : Colors.grey,
+                fontSize: 30,
+                fontFeatures: const [
+                  FontFeature.tabularFigures(),
+                ],
+              ))),
     );
   }
 }

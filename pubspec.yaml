@@ -37,8 +37,9 @@ dependencies:
   flutter_appauth: ^2.4.1
   flutter_secure_storage: ^5.0.2
   http: ^0.13.4
-  bishop: ^0.3.3
   soundpool: ^2.3.0
+  dartchess:
+    path: ../dartchess
   chessground:
     git:
       url: https://github.com/lichess-org/flutter-chessground.git

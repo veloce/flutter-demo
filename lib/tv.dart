@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:chessground/chessground.dart' as cg;
-import 'package:bishop/bishop.dart' as bh;
+import 'package:dartchess/dartchess.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
 import 'widgets.dart';
@@ -21,7 +21,7 @@ class _TVState extends State<TV> {
   final http.Client _client = http.Client();
   late final Stream<FeaturedEvent> _tvStream;
   cg.Color _orientation = cg.Color.white;
-  bh.Game? _game;
+  Chess? _game;
   cg.Color? _turn;
   FeaturedPlayer? _whitePlayer;
   FeaturedPlayer? _blackPlayer;
@@ -29,18 +29,14 @@ class _TVState extends State<TV> {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final bool ongoingGame = _game != null &&
-        !_game!.insufficientMaterial &&
-        _game!.generateLegalMoves().isNotEmpty;
+    final bool ongoingGame = _game != null && !_game!.isGameOver;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lichess TV'),
         actions: [
           IconButton(
-              icon: sound.isMuted()
-                  ? const Icon(Icons.volume_off)
-                  : const Icon(Icons.volume_up),
+              icon: sound.isMuted() ? const Icon(Icons.volume_off) : const Icon(Icons.volume_up),
               onPressed: () {
                 setState(() {
                   sound.toggle();
@@ -63,10 +59,8 @@ class _TVState extends State<TV> {
                 fen: emptyFen,
               );
             } else {
-              final topPlayer =
-                  _orientation == cg.Color.white ? _blackPlayer : _whitePlayer;
-              final bottomPlayer =
-                  _orientation == cg.Color.white ? _whitePlayer : _blackPlayer;
+              final topPlayer = _orientation == cg.Color.white ? _blackPlayer : _whitePlayer;
+              final bottomPlayer = _orientation == cg.Color.white ? _whitePlayer : _blackPlayer;
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -79,8 +73,7 @@ class _TVState extends State<TV> {
                           active: ongoingGame && _turn == topPlayer.color)
                       : const SizedBox.shrink(),
                   cg.Board(
-                    settings: const cg.Settings(
-                        animationDuration: Duration(milliseconds: 100)),
+                    settings: const cg.Settings(animationDuration: Duration.zero),
                     theme: cg.BoardTheme.green,
                     size: screenWidth,
                     orientation: _orientation,
@@ -105,8 +98,7 @@ class _TVState extends State<TV> {
   }
 
   Stream<FeaturedEvent> startStreaming() async* {
-    final resp = await _client
-        .send(http.Request('GET', Uri.parse('$kLichessHost/api/tv/feed')));
+    final resp = await _client.send(http.Request('GET', Uri.parse('$kLichessHost/api/tv/feed')));
     yield* resp.stream
         .toStringStream()
         .where((event) => event.isNotEmpty && event != '\n')
@@ -115,9 +107,7 @@ class _TVState extends State<TV> {
       switch (event['t']) {
         case 'featured':
           setState(() {
-            _orientation = event['d']['orientation'] == 'white'
-                ? cg.Color.white
-                : cg.Color.black;
+            _orientation = event['d']['orientation'] == 'white' ? cg.Color.white : cg.Color.black;
 
             _whitePlayer = FeaturedPlayer.fromJson(
                 event['d']['players'].firstWhere((p) => p['color'] == 'white'));
@@ -134,14 +124,13 @@ class _TVState extends State<TV> {
           break;
       }
       final String fen = event['d']['fen'] ?? emptyFen;
-      _game = bh.Game(variant: bh.Variant.standard(), fen: fen);
+      _game = Chess.fromSetup(Setup.parseFen(fen));
       setState(() {
         final letter = fen.substring(fen.length - 1);
         _turn = letter == 'w' ? cg.Color.white : cg.Color.black;
       });
       final String? lm = event['d']['lm'];
-      return FeaturedEvent(
-          fen: fen, lm: lm != null ? cg.Move.fromUci(lm) : null);
+      return FeaturedEvent(fen: fen, lm: lm != null ? cg.Move.fromUci(lm) : null);
     });
   }
 

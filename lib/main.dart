@@ -138,8 +138,7 @@ class PlayBotButton extends StatelessWidget {
   final Me me;
   final String bot;
 
-  const PlayBotButton({required this.me, required this.bot, Key? key})
-      : super(key: key);
+  const PlayBotButton({required this.me, required this.bot, Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
