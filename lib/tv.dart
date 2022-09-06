@@ -21,7 +21,7 @@ class _TVState extends State<TV> {
   final http.Client _client = http.Client();
   late final Stream<FeaturedEvent> _tvStream;
   cg.Color _orientation = cg.Color.white;
-  Chess? _game;
+  Position<Chess>? _pos;
   cg.Color? _turn;
   FeaturedPlayer? _whitePlayer;
   FeaturedPlayer? _blackPlayer;
@@ -29,7 +29,7 @@ class _TVState extends State<TV> {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final bool ongoingGame = _game != null && !_game!.isGameOver;
+    final bool ongoingGame = _pos != null && !_pos!.isGameOver;
 
     return Scaffold(
       appBar: AppBar(
@@ -124,7 +124,7 @@ class _TVState extends State<TV> {
           break;
       }
       final String fen = event['d']['fen'] ?? emptyFen;
-      _game = Chess.fromSetup(Setup.parseFen(fen));
+      _pos = Chess.fromSetup(Setup.parseFen(fen));
       setState(() {
         final letter = fen.substring(fen.length - 1);
         _turn = letter == 'w' ? cg.Color.white : cg.Color.black;

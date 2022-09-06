@@ -292,8 +292,9 @@ class GameState {
   final int binc;
   final String status;
 
-  final List<String> _moveList;
-  Chess _game = Chess.initial;
+  final List<String> _uciMoves;
+  final List<String> _sanMoves = [];
+  Position<Chess> _position = Chess.initial;
 
   late final cg.ValidMoves _validMoves;
 
@@ -304,10 +305,12 @@ class GameState {
       required this.winc,
       required this.binc,
       required this.status})
-      : _moveList = moves.split(' ').where((m) => m.isNotEmpty).toList() {
-    for (final m in _moveList) {
+      : _uciMoves = moves.split(' ').where((m) => m.isNotEmpty).toList() {
+    for (final m in _uciMoves) {
       final move = Move.fromUci(m);
-      _game = _game.play(move);
+      final newPos = _position.playToSan(move);
+      _position = newPos.item1;
+      _sanMoves.add(newPos.item2);
     }
 
     _validMoves = _makeValidMoves();
@@ -315,33 +318,35 @@ class GameState {
 
   bool playMove(cg.Move move) {
     try {
-      _game = _game.play(Move.fromUci(move.uci));
-      _moveList.add(move.uci);
+      final newPos = _position.playToSan(Move.fromUci(move.uci));
+      _position = newPos.item1;
+      _uciMoves.add(move.uci);
+      _sanMoves.add(newPos.item2);
       return true;
     } catch (_) {
       return false;
     }
   }
 
-  String get fen => _game.fen;
-  cg.Color get turn => _game.turn == Color.white ? cg.Color.white : cg.Color.black;
+  String get fen => _position.fen;
+  cg.Color get turn => _position.turn == Color.white ? cg.Color.white : cg.Color.black;
   cg.Move? get lastMove =>
-      _moveList.isNotEmpty ? cg.Move.fromUci(_moveList[_moveList.length - 1]) : null;
+      _uciMoves.isNotEmpty ? cg.Move.fromUci(_uciMoves[_uciMoves.length - 1]) : null;
   cg.ValidMoves? get validMoves => _validMoves;
-  bool get abortable => status == 'started' && _game.fullmoves < 1;
-  bool get resignable => status == 'started' && _game.fullmoves > 1;
+  bool get abortable => status == 'started' && _position.fullmoves < 1;
+  bool get resignable => status == 'started' && _position.fullmoves > 1;
   bool get playing => status == 'started';
-  int get fullmoves => _game.fullmoves;
+  int get fullmoves => _position.fullmoves;
   bool get isLastMoveCapture {
-    // TODO
-    return false;
+    final lm = _sanMoves.isNotEmpty ? _sanMoves[_sanMoves.length - 1] : null;
+    return lm != null ? lm.contains('x') : false;
   }
 
   cg.ValidMoves _makeValidMoves() {
     final cg.ValidMoves result = {};
-    for (final entry in _game.legalMoves.entries) {
-      final fromSquare = makeSquare(entry.key);
-      result[fromSquare] = entry.value.squares.map((e) => makeSquare(e)).toSet();
+    for (final entry in _position.legalMoves.entries) {
+      final fromSquare = toAlgebraic(entry.key);
+      result[fromSquare] = entry.value.squares.map((e) => toAlgebraic(e)).toSet();
     }
     return result;
   }
