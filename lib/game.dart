@@ -38,6 +38,7 @@ class Game extends StatefulWidget {
 
 class _GameState extends State<Game> {
   final http.Client _client = AuthClient(http.Client());
+  final ScrollController _scrollController = ScrollController();
 
   Map<String, dynamic>? _gameInfo;
   GameState? _gameState;
@@ -100,6 +101,19 @@ class _GameState extends State<Game> {
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  if (_gameState != null)
+                    Container(
+                      padding: const EdgeInsets.only(left: 5),
+                      height: 40,
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _gameState!._sanMoves.length,
+                        itemBuilder: (_, index) => Container(
+                            child: Text(_gameState!._sanMoves[index]),
+                            margin: const EdgeInsets.only(right: 5)),
+                      ),
+                    ),
                   topPlayer,
                   board,
                   bottomPlayer,
@@ -213,6 +227,16 @@ class _GameState extends State<Game> {
     });
   }
 
+  void _scrollToMaxExtent() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeIn,
+      );
+    });
+  }
+
   void _listenToGameEvents(String id) async {
     final resp = await _client
         .send(http.Request('GET', Uri.parse('$kLichessHost/api/board/game/stream/$id')));
@@ -252,6 +276,7 @@ class _GameState extends State<Game> {
         }
         setState(() {
           _gameState = gs;
+          _scrollToMaxExtent();
         });
       }
     });
