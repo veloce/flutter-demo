@@ -60,7 +60,7 @@ class _GameState extends State<Game> {
       fen: _gameState?.fen ?? '8/8/8/8/8/8/8/8 w - - 0 1',
       lastMove: _gameState?.lastMove,
       turnColor: _gameState?.turn ?? orientation,
-      onMove: _onMove,
+      onMove: _onUserMove,
     );
     final topPlayerColor = pov == 'white' ? 'black' : 'white';
     final Widget topPlayer = _gameInfo != null
@@ -166,7 +166,7 @@ class _GameState extends State<Game> {
     );
   }
 
-  void _onMove(cg.Move move) async {
+  void _onUserMove(cg.Move move) async {
     final c = RetryClient.withDelays(
       AuthClient(http.Client()),
       httpRetries,
