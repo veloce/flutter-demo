@@ -338,7 +338,7 @@ class GameState {
       _sanMoves.add(newPos.item2);
     }
 
-    _validMoves = _makeValidMoves();
+    _validMoves = algebraicLegalMoves(_position);
   }
 
   bool playMove(cg.Move move) {
@@ -365,14 +365,5 @@ class GameState {
   bool get isLastMoveCapture {
     final lm = _sanMoves.isNotEmpty ? _sanMoves[_sanMoves.length - 1] : null;
     return lm != null ? lm.contains('x') : false;
-  }
-
-  cg.ValidMoves _makeValidMoves() {
-    final cg.ValidMoves result = {};
-    for (final entry in _position.legalMoves.entries) {
-      final fromSquare = toAlgebraic(entry.key);
-      result[fromSquare] = entry.value.squares.map((e) => toAlgebraic(e)).toSet();
-    }
-    return result;
   }
 }

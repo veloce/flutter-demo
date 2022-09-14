@@ -39,7 +39,9 @@ dependencies:
   http: ^0.13.4
   soundpool: ^2.3.0
   dartchess:
-    path: ../dartchess
+    git:
+      url: https://github.com/lichess-org/dartchess.git
+      ref: main
   chessground:
     git:
       url: https://github.com/lichess-org/flutter-chessground.git
