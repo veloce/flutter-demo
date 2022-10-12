@@ -34,7 +34,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "02ff2c6c80b4264695089e5272000245c1015630"
+      resolved-ref: "3e4aa5194da59880c46ed1db055681937a8ca6d8"
       url: "https://github.com/lichess-org/flutter-chessground.git"
     source: git
     version: "0.0.1"

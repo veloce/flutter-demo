@@ -20,9 +20,9 @@ class TV extends StatefulWidget {
 class _TVState extends State<TV> {
   final http.Client _client = http.Client();
   late final Stream<FeaturedEvent> _tvStream;
-  cg.Color _orientation = cg.Color.white;
+  cg.Side _orientation = cg.Side.white;
   Position<Chess>? _pos;
-  cg.Color? _turn;
+  cg.Side? _turn;
   FeaturedPlayer? _whitePlayer;
   FeaturedPlayer? _blackPlayer;
 
@@ -53,14 +53,15 @@ class _TVState extends State<TV> {
             } else if (snapshot.connectionState == ConnectionState.waiting ||
                 snapshot.data == null) {
               return cg.Board(
+                interactableSide: cg.InteractableSide.none,
                 theme: cg.BoardTheme.green,
                 size: screenWidth,
-                orientation: cg.Color.white,
+                orientation: cg.Side.white,
                 fen: emptyFen,
               );
             } else {
-              final topPlayer = _orientation == cg.Color.white ? _blackPlayer : _whitePlayer;
-              final bottomPlayer = _orientation == cg.Color.white ? _whitePlayer : _blackPlayer;
+              final topPlayer = _orientation == cg.Side.white ? _blackPlayer : _whitePlayer;
+              final bottomPlayer = _orientation == cg.Side.white ? _whitePlayer : _blackPlayer;
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -73,6 +74,7 @@ class _TVState extends State<TV> {
                           active: ongoingGame && _turn == topPlayer.color)
                       : const SizedBox.shrink(),
                   cg.Board(
+                    interactableSide: cg.InteractableSide.none,
                     settings: const cg.Settings(animationDuration: Duration.zero),
                     theme: cg.BoardTheme.green,
                     size: screenWidth,
@@ -107,7 +109,7 @@ class _TVState extends State<TV> {
       switch (event['t']) {
         case 'featured':
           setState(() {
-            _orientation = event['d']['orientation'] == 'white' ? cg.Color.white : cg.Color.black;
+            _orientation = event['d']['orientation'] == 'white' ? cg.Side.white : cg.Side.black;
 
             _whitePlayer = FeaturedPlayer.fromJson(
                 event['d']['players'].firstWhere((p) => p['color'] == 'white'));
@@ -127,7 +129,7 @@ class _TVState extends State<TV> {
       _pos = Chess.fromSetup(Setup.parseFen(fen));
       setState(() {
         final letter = fen.substring(fen.length - 1);
-        _turn = letter == 'w' ? cg.Color.white : cg.Color.black;
+        _turn = letter == 'w' ? cg.Side.white : cg.Side.black;
       });
       final String? lm = event['d']['lm'];
       return FeaturedEvent(fen: fen, lm: lm != null ? cg.Move.fromUci(lm) : null);
@@ -155,7 +157,7 @@ class FeaturedEvent {
 }
 
 class FeaturedPlayer {
-  final cg.Color color;
+  final cg.Side color;
   final String name;
   final String? title;
   final int rating;
@@ -169,7 +171,7 @@ class FeaturedPlayer {
       required this.seconds});
 
   FeaturedPlayer.fromJson(Map<String, dynamic> json)
-      : color = json['color'] == 'white' ? cg.Color.white : cg.Color.black,
+      : color = json['color'] == 'white' ? cg.Side.white : cg.Side.black,
         name = json['user']['name'],
         title = json['user']['title'],
         rating = json['rating'],

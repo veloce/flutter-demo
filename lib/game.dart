@@ -47,19 +47,20 @@ class _GameState extends State<Game> {
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
     final pov = _gameInfo?['black']['id'] == widget.me.id ? 'black' : 'white';
-    final orientation = pov == 'white' ? cg.Color.white : cg.Color.black;
+    final orientation = pov == 'white' ? cg.Side.white : cg.Side.black;
     final Widget board = cg.Board(
-      settings: cg.Settings(
-        interactable: _gameState != null && _gameState!.playing,
-        interactableColor: pov == 'white' ? cg.InteractableColor.white : cg.InteractableColor.black,
-      ),
+      interactableSide: _gameState == null || !_gameState!.playing
+          ? cg.InteractableSide.none
+          : pov == 'white'
+              ? cg.InteractableSide.white
+              : cg.InteractableSide.black,
       theme: cg.BoardTheme.green,
       size: screenWidth,
       orientation: orientation,
       validMoves: _gameState?.validMoves,
       fen: _gameState?.fen ?? '8/8/8/8/8/8/8/8 w - - 0 1',
       lastMove: _gameState?.lastMove,
-      turnColor: _gameState?.turn ?? orientation,
+      sideToMove: _gameState?.turn ?? orientation,
       onMove: _onUserMove,
     );
     final topPlayerColor = pov == 'white' ? 'black' : 'white';
@@ -166,7 +167,7 @@ class _GameState extends State<Game> {
     );
   }
 
-  void _onUserMove(cg.Move move) async {
+  void _onUserMove(cg.Move move, {bool? isPremove}) async {
     final c = RetryClient.withDelays(
       AuthClient(http.Client()),
       httpRetries,
@@ -354,7 +355,7 @@ class GameState {
   }
 
   String get fen => _position.fen;
-  cg.Color get turn => _position.turn == Color.white ? cg.Color.white : cg.Color.black;
+  cg.Side get turn => _position.turn == Color.white ? cg.Side.white : cg.Side.black;
   cg.Move? get lastMove =>
       _uciMoves.isNotEmpty ? cg.Move.fromUci(_uciMoves[_uciMoves.length - 1]) : null;
   cg.ValidMoves? get validMoves => _validMoves;
