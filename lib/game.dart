@@ -355,7 +355,7 @@ class GameState {
   }
 
   String get fen => _position.fen;
-  cg.Side get turn => _position.turn == Color.white ? cg.Side.white : cg.Side.black;
+  cg.Side get turn => _position.turn == Side.white ? cg.Side.white : cg.Side.black;
   cg.Move? get lastMove =>
       _uciMoves.isNotEmpty ? cg.Move.fromUci(_uciMoves[_uciMoves.length - 1]) : null;
   cg.ValidMoves? get validMoves => _validMoves;
